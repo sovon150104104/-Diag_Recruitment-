@@ -1,0 +1,128 @@
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+image_path = 'office_noisy .png'
+image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+# Define Perona-Malik anisotropic diffusion
+def anisotropic_diffusion(img, num_iter, kappa, option=1):
+    img = img.astype('float32')
+    h, w = img.shape
+    diffused_img = img.copy()
+    
+    for t in range(num_iter):
+        # Compute gradients
+        north = np.roll(diffused_img, -1, axis=0)
+        south = np.roll(diffused_img, 1, axis=0)
+        east = np.roll(diffused_img, -1, axis=1)
+        west = np.roll(diffused_img, 1, axis=1)
+
+        # Calculate the gradients
+        deltaN = north - diffused_img
+        deltaS = south - diffused_img
+        deltaE = east - diffused_img
+        deltaW = west - diffused_img
+
+        # Calculate the diffusion coefficient
+        if option == 1:
+            cN = np.exp(-(deltaN/kappa)**2)
+            cS = np.exp(-(deltaS/kappa)**2)
+            cE = np.exp(-(deltaE/kappa)**2)
+            cW = np.exp(-(deltaW/kappa)**2)
+        elif option == 2:
+            cN = 1.0 / (1.0 + (deltaN/kappa)**2)
+            cS = 1.0 / (1.0 + (deltaS/kappa)**2)
+            cE = 1.0 / (1.0 + (deltaE/kappa)**2)
+            cW = 1.0 / (1.0 + (deltaW/kappa)**2)
+
+        # Update the image
+        diffused_img += 0.25 * (cN*deltaN + cS*deltaS + cE*deltaE + cW*deltaW)
+        
+    return diffused_img
+
+# Set parameters
+kappa = 0.5
+iterations = [1, 5, 10, 30, 100]
+diffused_images = []
+# Apply anisotropic diffusion for each iteration
+for t in iterations:
+    diffused_image = anisotropic_diffusion(image, t, kappa)
+    diffused_images.append(diffused_image)
+
+# Display the images horizontally
+fig, axes = plt.subplots(1, len(diffused_images)+1, figsize=(15, 5))
+axes[0].imshow(image, cmap='gray')
+axes[0].set_title("Original")
+
+for i, img in enumerate(diffused_images):
+    axes[i+1].imshow(img, cmap='gray')
+    axes[i+1].set_title(f"t={iterations[i]}")
+
+for ax in axes:
+    ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+#Generating image varying the contrast parameter:
+
+def anisotropic_diffusion(img, num_iter, kappa, option=1):
+    img = img.astype('float32')
+    h, w = img.shape
+    diffused_img = img.copy()
+    
+    for t in range(num_iter):
+        # Compute gradients
+        north = np.roll(diffused_img, -1, axis=0)
+        south = np.roll(diffused_img, 1, axis=0)
+        east = np.roll(diffused_img, -1, axis=1)
+        west = np.roll(diffused_img, 1, axis=1)
+
+        # Calculate the gradients
+        deltaN = north - diffused_img
+        deltaS = south - diffused_img
+        deltaE = east - diffused_img
+        deltaW = west - diffused_img
+
+        # Calculate the diffusion coefficient
+        if option == 1:
+            cN = np.exp(-(deltaN/kappa)**2)
+            cS = np.exp(-(deltaS/kappa)**2)
+            cE = np.exp(-(deltaE/kappa)**2)
+            cW = np.exp(-(deltaW/kappa)**2)
+        elif option == 2:
+            cN = 1.0 / (1.0 + (deltaN/kappa)**2)
+            cS = 1.0 / (1.0 + (deltaS/kappa)**2)
+            cE = 1.0 / (1.0 + (deltaE/kappa)**2)
+            cW = 1.0 / (1.0 + (deltaW/kappa)**2)
+
+        # Update the image
+        diffused_img += 0.25 * (cN*deltaN + cS*deltaS + cE*deltaE + cW*deltaW)
+        
+    return diffused_img
+
+# Set fixed diffusion time
+fixed_time = 10
+kappa_values = [0.5, 1, 2, 5, 10]
+diffused_images_lambda = []
+
+# Apply anisotropic diffusion for each kappa (contrast parameter)
+for kappa in kappa_values:
+    diffused_image = anisotropic_diffusion(image, fixed_time, kappa)
+    diffused_images_lambda.append(diffused_image)
+
+# Display the images horizontally without circles
+fig, axes = plt.subplots(1, len(diffused_images_lambda)+1, figsize=(15, 5))
+axes[0].imshow(image, cmap='gray')
+axes[0].set_title("Original")
+
+# Plotting each diffused image without circles
+for i, img in enumerate(diffused_images_lambda):
+    axes[i+1].imshow(img, cmap='gray')
+    axes[i+1].set_title(f"λ={kappa_values[i]}")
+
+# Turn off axes for all plots
+for ax in axes:
+    ax.axis('off')
+
+plt.tight_layout()
+plt.show()
